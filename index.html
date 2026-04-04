@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oyster Attendance</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDK Compat v8 Mode -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- jsPDF and AutoTable for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- =============== GLOBAL HEADER =============== -->
+        <header class="global-top-header">
+            <div class="global-brand">
+                <div class="global-logo">
+                    <img src="logo.png" alt="Oyster Kode Club Logo" class="global-logo-img">
+                </div>
+                <span class="global-title">Oyster Kode Club</span>
+            </div>
+        </header>
+
+        <!-- =============== AUTHENTICATION SECTION =============== -->
+        <div id="auth-section" class="auth-layout">
+            <div class="auth-card-premium">
+                <!-- Image Logo -->
+                <div class="auth-logo">
+                    <img src="logo.png" alt="Oyster Kode Club Logo" class="auth-logo-img">
+                </div>
+                
+                <h1 class="auth-title">Oyster Kode Club</h1>
+                <p class="auth-subtitle">DEVELOPER ACCESS PORTAL</p>
+
+                <form id="login-form" class="auth-form-premium">
+                    <div class="input-group">
+                        <label>EMAIL ADDRESS</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉</span>
+                            <input type="email" id="email" placeholder="admin@luminous.com" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>PASSWORD</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="password" placeholder="••••••••" required>
+                            <span class="input-icon-right" id="toggle-password">👁</span>
+                        </div>
+                    </div>
+
+                    <div class="auth-options">
+                        <label class="remember-me">
+                            <input type="checkbox">
+                            <i></i> Remember Me
+                        </label>
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="auth-btn">LOGIN INTO CLUB</button>
+                    <p id="auth-error" class="error"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- =============== DASHBOARD SECTION =============== -->
+        <div id="dashboard-section" class="container hidden">
+            <!-- Navbar -->
+            <nav class="navbar">
+                <div class="user-info">
+                    <span id="user-name"></span>
+                    <span id="user-role" class="badge"></span>
+                    <span id="user-club-id" class="badge"></span>
+                </div>
+                <button id="logout-btn" class="secondary-btn">Logout</button>
+            </nav>
+
+            <div class="content">
+                <!-- BATCHES VIEW -->
+                <div id="batches-view">
+                    <div class="header-actions">
+                        <h2>Select a Batch</h2>
+                        <button id="add-batch-btn" class="primary-btn" style="margin-left: auto;">+ Add Batch</button>
+                    </div>
+                    <div class="batches-grid" id="batches-list">
+                        <!-- Batches injected here via JS -->
+                    </div>
+                </div>
+
+                <!-- STUDENTS & ATTENDANCE VIEW -->
+                <div id="students-view" class="hidden">
+                    <div class="header-actions">
+                        <button id="back-to-batches" class="secondary-btn">← Back to Batches</button>
+                        <h2 id="current-batch-name"></h2>
+                        <input type="date" id="current-date" class="date-badge" tabindex="0">
+                    </div>
+
+                    <div class="controls-panel">
+                        <div class="search-box">
+                            <input type="text" id="search-student" placeholder="Search by Club ID...">
+                        </div>
+                        <div class="action-buttons">
+                            <button id="add-student-btn" class="primary-btn">Add Student</button>
+                            <button id="save-attendance-btn" class="primary-btn">Save Attendance</button>
+                            <button id="download-pdf-btn" class="secondary-btn">Download Attendance PDF</button>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Summary -->
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <h3>Present</h3>
+                            <span id="total-present" class="text-green">0</span>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Absent</h3>
+                            <span id="total-absent" class="text-red">0</span>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Total Students</h3>
+                            <span id="total-students">0</span>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Attendance %</h3>
+                            <span id="attendance-percent" class="text-primary">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts Panel -->
+                    <div class="analytics-panel">
+                        <div class="chart-container">
+                            <h4>Historical Attendance Trends</h4>
+                            <div class="canvas-wrapper">
+                                <canvas id="bar-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h4>Present vs Absent</h4>
+                            <div class="canvas-wrapper">
+                                <canvas id="pie-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions Panel -->
+                    <div class="bulk-actions-panel">
+                        <button id="mark-all-present-btn" class="primary-btn success-btn">Mark All Present</button>
+                        <button id="delete-attendance-btn" class="secondary-btn danger-action-btn">Delete Today's Attendance</button>
+                    </div>
+
+                    <!-- Students Table -->
+                    <div class="table-container">
+                        <table id="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Club ID</th>
+                                    <th>Name</th>
+                                    <th>Attendance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-list">
+                                <!-- Students injected here via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============== MODAL: ADD BATCH =============== -->
+        <div id="batch-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn" id="close-batch-modal">&times;</span>
+                <h2>Add Batch</h2>
+                <form id="batch-form">
+                    <input type="text" id="batch-name" placeholder="Enter Batch Year / Name" required>
+                    <button type="submit" class="primary-btn">Save Batch</button>
+                    <p id="batch-error" class="error"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- =============== MODAL: ADD / EDIT STUDENT =============== -->
+        <div id="student-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2 id="modal-title">Add Student</h2>
+                <form id="student-form">
+                    <input type="hidden" id="student-id">
+                    <input type="text" id="student-name" placeholder="Student Name" required>
+                    <input type="text" id="student-club-id" placeholder="Club ID" required>
+                    <button type="submit" class="primary-btn">Save</button>
+                    <p id="student-error" class="error"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- =============== LOADING INDICATOR =============== -->
+        <div id="loader" class="loader hidden">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- JS Link -->
+    <script src="app.js"></script>
+</body>
+
+</html>
