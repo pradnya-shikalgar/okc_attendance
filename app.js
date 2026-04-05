@@ -13,13 +13,13 @@ window.addEventListener('load', () => {
 // =============== FIREBASE CONFIGURATION ===============
 // Placeholder - MUST be filled with actual Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCuARnp-Oe4VRCkkDS8IDt8CYmShG4Iugo",
-  authDomain: "oystre-kode-club.firebaseapp.com",
-  projectId: "oystre-kode-club",
-  storageBucket: "oystre-kode-club.firebasestorage.app",
-  messagingSenderId: "1070374612686",
-  appId: "1:1070374612686:web:1586415f8c5211b4036a9f",
-  measurementId: "G-2V413HPR2M"
+    apiKey: "AIzaSyCuARnp-Oe4VRCkkDS8IDt8CYmShG4Iugo",
+    authDomain: "oystre-kode-club.firebaseapp.com",
+    projectId: "oystre-kode-club",
+    storageBucket: "oystre-kode-club.firebasestorage.app",
+    messagingSenderId: "1070374612686",
+    appId: "1:1070374612686:web:1586415f8c5211b4036a9f",
+    measurementId: "G-2V413HPR2M"
 };
 
 // Initialize Firebase
@@ -102,7 +102,7 @@ const studentError = document.getElementById('student-error');
 currentDateEl.value = selectedDate;
 
 currentDateEl.addEventListener('change', (e) => {
-    if(e.target.value) {
+    if (e.target.value) {
         selectedDate = e.target.value;
         pendingAttendance = {}; // Reset pending changes if date switches
         if (currentBatchId) {
@@ -135,15 +135,15 @@ auth.onAuthStateChanged(async (user) => {
                     clubId: "N/A"
                 };
             }
-            
+
             // Update UI User Profile
             userNameEl.innerText = currentUser.name || user.email.split('@')[0];
             userRoleEl.innerText = currentUser.role || "Admin";
             userClubIdEl.innerText = "ID: " + (currentUser.clubId || "N/A");
-            
+
             authSection.classList.add('hidden');
             dashboardSection.classList.remove('hidden');
-            
+
             loadBatches();
         } catch (error) {
             authError.innerText = "Error fetching user data: " + error.message;
@@ -161,7 +161,7 @@ loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
+
     showLoader();
     try {
         await auth.signInWithEmailAndPassword(email, password);
@@ -182,7 +182,7 @@ async function loadBatches() {
     try {
         const snapshot = await db.collection('batches').get();
         batchesList.innerHTML = '';
-        
+
         if (snapshot.empty) {
             batchesList.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">No batches found in Firestore.</p>';
         } else {
@@ -190,11 +190,11 @@ async function loadBatches() {
                 const batch = doc.data();
                 const div = document.createElement('div');
                 div.className = 'batch-card';
-                
+
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'batch-title';
                 titleSpan.innerText = batch.name || `Batch ${doc.id}`;
-                
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'batch-delete-btn';
                 deleteBtn.innerHTML = '🗑️';
@@ -270,13 +270,13 @@ function openBatch(batchId, batchName) {
     currentBatchId = batchId;
     currentBatchName = batchName;
     currentBatchNameEl.innerText = batchName;
-    
+
     pendingAttendance = {}; // Reset local cache
-    
+
     batchesView.classList.add('hidden');
     studentsView.classList.remove('hidden');
     searchStudentInput.value = "";
-    
+
     loadStudents();
 }
 
@@ -293,24 +293,24 @@ function loadStudents() {
     showLoader();
     // Unsubscribe from previous listener if going between batches
     if (unsubscribeStudents) unsubscribeStudents();
-    
+
     try {
         unsubscribeStudents = db.collection('batches').doc(currentBatchId).collection('students')
-        .onSnapshot(snapshot => {
-            studentsData = [];
-            snapshot.forEach(doc => {
-                studentsData.push({ id: doc.id, ...doc.data() });
+            .onSnapshot(snapshot => {
+                studentsData = [];
+                snapshot.forEach(doc => {
+                    studentsData.push({ id: doc.id, ...doc.data() });
+                });
+
+                // 8. EXTRA RULES: Automatically SORT students by clubId
+                studentsData.sort((a, b) => a.clubId.localeCompare(b.clubId));
+
+                renderStudents(searchStudentInput.value);
+                hideLoader();
+            }, error => {
+                console.error("Error listening to students:", error);
+                hideLoader();
             });
-            
-            // 8. EXTRA RULES: Automatically SORT students by clubId
-            studentsData.sort((a, b) => a.clubId.localeCompare(b.clubId));
-            
-            renderStudents(searchStudentInput.value);
-            hideLoader();
-        }, error => {
-            console.error("Error listening to students:", error);
-            hideLoader();
-        });
     } catch (error) {
         console.error("Error setting up students listener:", error);
         hideLoader();
@@ -321,17 +321,17 @@ function renderStudents(filterText = "") {
     studentsList.innerHTML = '';
     let presentCount = 0;
     let absentCount = 0;
-    
+
     const lowerFilter = filterText.toLowerCase();
     const filteredStudents = studentsData.filter(s => s.clubId.toLowerCase().includes(lowerFilter));
-    
+
     filteredStudents.forEach(student => {
         // Find attendance for selectedDate FIRST looking at local changes
         let attendance = pendingAttendance[student.id];
         if (attendance === undefined) {
             attendance = student.attendance && student.attendance[selectedDate] ? student.attendance[selectedDate] : null;
         }
-        
+
         if (attendance === "Present") presentCount++;
         if (attendance === "Absent") absentCount++;
 
@@ -356,22 +356,22 @@ function renderStudents(filterText = "") {
         `;
         studentsList.appendChild(tr);
     });
-    
+
     // Update Summaries
     totalStudentsEl.innerText = filteredStudents.length;
     totalPresentEl.innerText = presentCount;
     totalAbsentEl.innerText = absentCount;
-    
+
     // Percentage Calculation
     const percentage = filteredStudents.length > 0 ? Math.round((presentCount / filteredStudents.length) * 100) : 0;
     attendancePercentEl.innerText = percentage + "%";
-    
+
     // Render Analytics Charts
     renderCharts(presentCount, absentCount, filteredStudents);
 }
 
 function renderCharts(presentCount, absentCount, currentStudents) {
-    if(analyticsPanel) analyticsPanel.classList.remove('hidden');
+    if (analyticsPanel) analyticsPanel.classList.remove('hidden');
 
     // Global Chart Defaults
     Chart.defaults.color = '#8b92a5';
@@ -380,7 +380,7 @@ function renderCharts(presentCount, absentCount, currentStudents) {
     // 1. Pie Chart - Selected Date Distribution
     const pieCtx = document.getElementById('pie-chart').getContext('2d');
     if (pieChart) pieChart.destroy();
-    
+
     pieChart = new Chart(pieCtx, {
         type: 'doughnut',
         data: {
@@ -446,12 +446,12 @@ function renderCharts(presentCount, absentCount, currentStudents) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { 
-                    beginAtZero: true, 
+                y: {
+                    beginAtZero: true,
                     grid: { color: 'rgba(255,255,255,0.05)' },
                     ticks: { precision: 0 }
                 },
-                x: { 
+                x: {
                     grid: { display: false }
                 }
             },
@@ -483,7 +483,7 @@ document.getElementById('mark-all-present-btn').addEventListener('click', () => 
 document.getElementById('delete-attendance-btn').addEventListener('click', async () => {
     if (!currentBatchId) return;
     if (!confirm(`Are you sure you want to delete all attendance records for ${selectedDate}?`)) return;
-    
+
     showLoader();
     try {
         const batch = db.batch();
@@ -494,7 +494,7 @@ document.getElementById('delete-attendance-btn').addEventListener('click', async
                     [selectedDate]: firebase.firestore.FieldValue.delete()
                 }
             }, { merge: true });
-            
+
             // Clear local cached states
             if (student.attendance && student.attendance[selectedDate]) {
                 delete student.attendance[selectedDate];
@@ -507,7 +507,7 @@ document.getElementById('delete-attendance-btn').addEventListener('click', async
 
         renderStudents(searchStudentInput.value);
         alert(`Attendance for ${selectedDate} has been deleted.`);
-        
+
         // =============== EXCEL EXPORT LOGIC ===============
         const exportData = [];
         const allDatesSet = new Set();
@@ -532,7 +532,7 @@ document.getElementById('delete-attendance-btn').addEventListener('click', async
         }
         // ==================================================
 
-    } catch(err) {
+    } catch (err) {
         console.error("Error deleting attendance: ", err);
         alert("Failed to delete attendance.");
     }
@@ -555,20 +555,20 @@ document.getElementById('save-attendance-btn').addEventListener('click', async (
                     [selectedDate]: status
                 }
             }, { merge: true });
-            
+
             // Update local studentsData to ensure export has the latest changes
             const s = studentsData.find(st => st.id === studentId);
-            if(s) {
-                if(!s.attendance) s.attendance = {};
+            if (s) {
+                if (!s.attendance) s.attendance = {};
                 s.attendance[selectedDate] = status;
             }
         }
         await batch.commit();
         pendingAttendance = {}; // Clear pending attendance
-        
+
         // =============== EXCEL EXPORT LOGIC ===============
         const exportData = [];
-        
+
         // 1. Extract all unique dates across all students for columns
         const allDatesSet = new Set();
         studentsData.forEach(student => {
@@ -584,13 +584,13 @@ document.getElementById('save-attendance-btn').addEventListener('click', async (
                 "Club ID": student.clubId,
                 "Name": student.name
             };
-            
+
             // Add each date as a column
             sortedDates.forEach(date => {
                 // If they have attendance for that date, log it, else 'Not Marked' (or empty depending on preference)
                 rowData[date] = (student.attendance && student.attendance[date]) ? student.attendance[date] : "Not Marked";
             });
-            
+
             exportData.push(rowData);
         });
 
@@ -602,7 +602,7 @@ document.getElementById('save-attendance-btn').addEventListener('click', async (
             XLSX.writeFile(wb, `Attendance_${currentBatchName}.xlsx`);
         }
         // ==================================================
-        
+
         alert("Attendance saved and exported to Excel successfully!");
     } catch (error) {
         console.error("Error saving attendance:", error);
@@ -626,7 +626,7 @@ document.querySelector('#student-modal .close-btn').addEventListener('click', ()
 
 window.editStudent = (studentId) => {
     const student = studentsData.find(s => s.id === studentId);
-    if(student) {
+    if (student) {
         modalTitle.innerText = "Edit Student";
         studentIdInput.value = student.id;
         studentNameInput.value = student.name;
@@ -637,7 +637,7 @@ window.editStudent = (studentId) => {
 };
 
 window.deleteStudent = async (studentId) => {
-    if(confirm("Are you sure you want to delete this student?")) {
+    if (confirm("Are you sure you want to delete this student?")) {
         showLoader();
         try {
             await db.collection('batches').doc(currentBatchId).collection('students').doc(studentId).delete();
@@ -654,20 +654,20 @@ studentForm.addEventListener('submit', async (e) => {
     const id = studentIdInput.value;
     const name = studentNameInput.value.trim();
     const clubId = studentClubIdInput.value.trim();
-    
+
     // EXTRA RULES: Prevent duplicate clubId
     const isDuplicate = studentsData.some(s => s.clubId === clubId && s.id !== id);
-    if(isDuplicate) {
+    if (isDuplicate) {
         studentError.innerText = "Club ID must be unique!";
         return;
     }
-    
+
     showLoader();
     studentError.innerText = "";
-    
+
     try {
         const data = { name, clubId };
-        
+
         if (id) {
             // Update
             await db.collection('batches').doc(currentBatchId).collection('students').doc(id).update(data);
@@ -688,19 +688,19 @@ studentForm.addEventListener('submit', async (e) => {
 document.getElementById('download-pdf-btn').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
+
     // PDF Title
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
     doc.text("Oyster Attendance Report", 14, 22);
-    
+
     // Metadata
     doc.setFontSize(11);
     doc.setTextColor(100, 100, 100);
     doc.text(`Date: ${selectedDate}`, 14, 32);
     doc.text(`Batch Name: ${currentBatchName}`, 14, 38);
     doc.text(`Summary -> Present: ${totalPresentEl.innerText} | Absent: ${totalAbsentEl.innerText} | Total: ${totalStudentsEl.innerText}`, 14, 44);
-    
+
     // Table content building (Sorted student list applies since studentsData is sorted)
     const tableData = [];
     studentsData.forEach(student => {
@@ -714,7 +714,7 @@ document.getElementById('download-pdf-btn').addEventListener('click', () => {
             attendance
         ]);
     });
-    
+
     // AutoTable layout
     doc.autoTable({
         startY: 50,
@@ -736,7 +736,7 @@ document.getElementById('download-pdf-btn').addEventListener('click', () => {
             }
         }
     });
-    
+
     // Save File
     doc.save(`Attendance_${currentBatchName}_${selectedDate}.pdf`);
 });
