@@ -974,32 +974,144 @@ tbody tr:last-child td {
     100% { transform: rotate(360deg); }
 }
 
+/* =============== INITIAL PRELOADER =============== */
+.initial-preloader {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #03040b;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.initial-preloader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.preloader-logo {
+    width: 120px;
+    height: 120px;
+    animation: preloader-pulse 1.5s infinite ease-in-out;
+    filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.4));
+    border-radius: 50%;
+}
+
+@keyframes preloader-pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
 /* =============== RESPONSIVE =============== */
-@media (max-width: 768px) {
-    .controls-panel {
-        flex-direction: column;
-        gap: 20px;
-        align-items: stretch;
+
+/* Tablet Responsive Styles */
+@media (max-width: 1023px) {
+    .container {
+        padding: 90px 15px 15px 15px;
     }
-    .search-box input {
-        width: 100%;
+    .global-top-header {
+        padding: 0 20px;
     }
     .summary-cards {
         grid-template-columns: 1fr 1fr;
     }
     .analytics-panel {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Stack charts vertically */
     }
-    .header-actions {
+    .controls-panel {
         flex-direction: column;
         align-items: stretch;
-        text-align: center;
+        gap: 15px;
     }
-    .date-badge {
-        margin: 10px auto 0;
+    .search-box {
+        width: 100%;
+    }
+    .search-box input {
+        width: 100%;
     }
     .action-buttons {
         flex-wrap: wrap;
         justify-content: center;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    table {
+        min-width: 600px; /* Force table to maintain a readable width and allow horizontal scrolling */
+    }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 767px) {
+    .auth-card-premium {
+        padding: 40px 25px;
+        max-width: 90%;
+    }
+    .auth-title {
+        font-size: 22px;
+    }
+    .auth-logo {
+        width: 70px;
+        height: 70px;
+    }
+    .navbar {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        text-align: center;
+    }
+    .user-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .batches-grid {
+        grid-template-columns: 1fr; /* Stack batches to single column */
+    }
+    .summary-cards {
+        grid-template-columns: 1fr; /* Stack summary cards to single column */
+    }
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        text-align: center;
+    }
+    .header-actions h2 {
+        font-size: 20px;
+    }
+    .header-actions .primary-btn {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    .date-badge {
+        margin: 0 auto;
+        width: 100%;
+        max-width: none;
+        justify-content: center;
+    }
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    .action-buttons button {
+        width: 100%;
+    }
+    .bulk-actions-panel {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .bulk-actions-panel button {
+        width: 100%;
+    }
+    th, td {
+        padding: 15px;
+    }
+    .modal-content {
+        padding: 25px;
+        width: 90%;
     }
 }

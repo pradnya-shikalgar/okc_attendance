@@ -1,3 +1,15 @@
+// =============== INITIAL PRELOADER ===============
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('initial-preloader');
+    if (preloader) {
+        preloader.classList.add('fade-out');
+        // Optional: remove from DOM completely after transition
+        setTimeout(() => {
+            preloader.style.display = 'none';
+        }, 600);
+    }
+});
+
 // =============== FIREBASE CONFIGURATION ===============
 // Placeholder - MUST be filled with actual Firebase configuration
 const firebaseConfig = {
@@ -608,7 +620,7 @@ document.getElementById('add-student-btn').addEventListener('click', () => {
     studentModal.classList.remove('hidden');
 });
 
-document.querySelector('.close-btn').addEventListener('click', () => {
+document.querySelector('#student-modal .close-btn').addEventListener('click', () => {
     studentModal.classList.add('hidden');
 });
 
